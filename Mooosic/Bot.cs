@@ -158,9 +158,24 @@ public class Bot
         return Task.CompletedTask;
     }
 
-    
-    
-    
+    public void TryStop()
+    {
+        _log.Information("Logging out of discord...");
+        try
+        {
+            var client = _provider.GetRequiredService<DiscordSocketClient>();
+            client.LogoutAsync().Wait();
+            client.StopAsync().Wait();
+        }
+        catch(Exception e)
+        {
+            _log.Information(e, "An Error occured while logging out. Giving up..");
+        }
+        
+    }
+
+
+
     private async Task PostCommandHandle(SlashCommandInfo info, IInteractionContext context, IResult result)
     {
         if (result.IsSuccess) return;

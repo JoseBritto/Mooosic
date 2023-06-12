@@ -35,14 +35,15 @@ Log.Logger = new LoggerConfiguration()
 
 Log.Information("Application Logging Ready!");
 
-Console.CancelKeyPress += (sender, eventArgs) => Cleanup();
+Bot? bot = null;
 
 
+Console.CancelKeyPress += (sender, eventArgs) => Cleanup(botInstance: bot);
 
 
 try
 {
-    var bot = new Bot(settings);
+    bot = new Bot(settings);
     bot.StartAsync().Wait();
     Task.Delay(-1).Wait();
 }
@@ -53,14 +54,19 @@ catch (Exception e)
 finally
 {
     // Cleanup at the end
-    Cleanup();
+    Cleanup(botInstance: bot);
 }
 
 
 
-void Cleanup(int exitCode = 0)
+void Cleanup(int exitCode = 0, Bot? botInstance = null)
 {
     Console.WriteLine("Please wait! Cleaning up...");
+    botInstance?.TryStop();
+    
+    Console.WriteLine("Flushing Logs...");
     Log.CloseAndFlush();
+
+    Console.WriteLine("Quitting...");
     Environment.Exit(exitCode);
 }
