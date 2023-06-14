@@ -14,14 +14,14 @@ public class VoiceControls
     }
     
     
-    public async Task<VCOperationResult> JoinAsync(IVoiceChannel channel, IGuildUser user, bool force = false)
+    public async Task<VcOperationResult> JoinAsync(IVoiceChannel channel, IGuildUser user, bool force = false)
     {
         
         // check permission
         var hasPermission = true;
         
         if(!hasPermission)
-            return new VCOperationResult
+            return new VcOperationResult
             {
                 WasSuccess = false,
                 Response = "You don't have enough permissions to execute this command!"
@@ -36,7 +36,7 @@ public class VoiceControls
             if (player.VoiceChannelId == channel.Id)
             {
                 reply = $"I'm already in {channel.Name} 🔊 🙄";
-                return new VCOperationResult
+                return new VcOperationResult
                 {
                     WasSuccess = false,
                     Response = reply
@@ -53,7 +53,7 @@ public class VoiceControls
 
         if (player is null)
         {
-            return new VCOperationResult
+            return new VcOperationResult
             {
                 WasSuccess = false,
                 Exception = new NullReferenceException("Player was null!")
@@ -61,7 +61,7 @@ public class VoiceControls
         }
         reply = $"Joined {channel.Name} 🔊";
 
-        return new VCOperationResult
+        return new VcOperationResult
         {
             WasSuccess = true,
             Response = reply
@@ -70,11 +70,11 @@ public class VoiceControls
 }
 
 
-public class VCOperationResult
+public class VcOperationResult
 {
     public bool WasSuccess{ get; init; }
     
-    public string Response { get; init; }
+    public string? Response { get; init; }
 
     public Exception? Exception { get; init; }
 }
