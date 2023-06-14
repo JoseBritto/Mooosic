@@ -2,6 +2,8 @@ using System.Reflection;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Lavalink4NET;
+using Lavalink4NET.DiscordNet;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
@@ -136,18 +138,30 @@ public class Bot
     
     private ServiceProvider ConfigureServices(ServiceCollection serviceCollection)
     {
+        var client = new DiscordSocketClient(new DiscordSocketConfig
+        {
+            LogLevel = LogSeverity.Info,
+            GatewayIntents = GatewayIntents.AllUnprivileged
+        });
+        
         serviceCollection
-            .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
-            {
-                LogLevel = LogSeverity.Info,
-                GatewayIntents = GatewayIntents.AllUnprivileged
-            }))
+            .AddSingleton(client)
             .AddSingleton(new InteractionServiceConfig
             {
                 LogLevel = LogSeverity.Info,
                 DefaultRunMode = RunMode.Async,
             })
-            .AddSingleton<InteractionService>();
+            .AddSingleton<InteractionService>()
+            .AddSingleton<IAudioService, LavalinkNode>()
+            .AddSingleton(new LavalinkNodeOptions
+            {
+                RestUri = _settings.Lavalink.RestUri,
+                WebSocketUri = _settings.Lavalink.WebsocketUri,
+                Password = _settings.Lavalink.Password
+            })
+            .AddSingleton<IDiscordClientWrapper>(new DiscordClientWrapper(client))
+            .AddSingleton<VoiceControls>()
+            .AddSingleton(_settings);
 
         return serviceCollection.BuildServiceProvider();
     }
@@ -155,6 +169,8 @@ public class Bot
     private Task ClientReady()
     {
         _log.Information("Bot is ready!");
+        var audio = _provider.GetRequiredService<IAudioService>();
+        Task.Run( () => audio.InitializeAsync().Wait());
         return Task.CompletedTask;
     }
 
