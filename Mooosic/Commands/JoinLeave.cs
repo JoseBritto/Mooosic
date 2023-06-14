@@ -4,12 +4,12 @@ using Discord.WebSocket;
 
 namespace Mooosic.Commands;
 
-public class Join : InteractionModuleBase
+public class JoinLeave : InteractionModuleBase
 {
     private readonly VoiceControls _controls;
     private readonly DiscordSocketClient _client;
 
-    public Join(VoiceControls controls, DiscordSocketClient client)
+    public JoinLeave(VoiceControls controls, DiscordSocketClient client)
     {
         _controls = controls;
         _client = client;
@@ -36,5 +36,16 @@ public class Join : InteractionModuleBase
         var result = await _controls.JoinAsync(vc, (Context.User as IGuildUser)!);
 
         await FollowupAsync(result.Response, ephemeral: result.WasSuccess == false);
+    }
+    
+    
+    [RequireContext(ContextType.Guild)]
+    [SlashCommand("leave", "Leaves the voice channel the bot is currently in")]
+    public async Task LeaveAsync()
+    {
+        await DeferAsync();
+        var result = await _controls.LeaveAsync((Context.User as IGuildUser)!);
+
+        await FollowupAsync(result.Response ?? $"Sorry an error occured: {result.Exception?.Message}", ephemeral: result.WasSuccess == false);
     }
 }
