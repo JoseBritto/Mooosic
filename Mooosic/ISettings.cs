@@ -1,4 +1,5 @@
 using Config.Net;
+using SpotifyAPI.Web;
 
 namespace Mooosic;
 
@@ -16,8 +17,20 @@ public interface ISettings
 
     [Option(Alias = "lavalink")] 
     public ILavalinkSetting Lavalink { get; }
+    
+    [Option(Alias = "spotify")] 
+    public ISpotifySetting Spotify { get; }
 
 
+}
+
+public interface ISpotifySetting
+{
+    [Option(Alias = "client_id")]
+    public string ClientId { get; }
+
+    [Option(Alias = "secret")]
+    public string Secret { get; }
 }
 
 public interface ILavalinkSetting

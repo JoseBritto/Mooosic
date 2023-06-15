@@ -160,9 +160,10 @@ public class Bot
                 Password = _settings.Lavalink.Password
             })
             .AddSingleton<IDiscordClientWrapper>(new DiscordClientWrapper(client))
+            .AddSingleton(_settings)
             .AddSingleton<VoiceControls>()
-            .AddSingleton(_settings);
-
+            .AddSingleton<SpotifyService>();
+        
         return serviceCollection.BuildServiceProvider();
     }
     

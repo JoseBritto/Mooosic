@@ -1,6 +1,7 @@
 using Discord;
 using Lavalink4NET;
 using Lavalink4NET.Player;
+using Mooosic.Util;
 
 namespace Mooosic;
 
@@ -153,6 +154,158 @@ public class VoiceControls
 
         
     }
+
+
+    public async Task<VcOperationResult> SkipAsync(IGuildUser user, int count = 1)
+    {
+        var guildId = user.GuildId;
+
+        var player = _audioService.GetPlayer<QueuedLavalinkPlayer>(guildId);
+
+        if (player is null)
+            return new VcOperationResult
+            {
+                WasSuccess = false,
+                Response = "Player was null. Please make the bot join a voice channel first!"
+            };
+
+        if (player.State == PlayerState.Destroyed || player.State == PlayerState.NotConnected)
+            return new VcOperationResult
+            {
+                WasSuccess = false,
+                Response = $"Player not a valid state. PlayerState: {player.State}"
+            };
+        await player.SkipAsync(count);
+
+        if (count > player.Queue.Count)
+            count = player.Queue.Count;
+        
+        return new VcOperationResult
+        {
+           WasSuccess = true,
+           Response = $"Skipped {count} tracks successfully!"
+        };
+    }
+    
+    public bool IsPlayerReady(IGuild guild)
+    {
+        var player = _audioService.GetPlayer(guild.Id);
+        
+        if(player is null) return false;
+
+        return player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed;
+    }
+    
+    
+    public async Task<SearchResult> SearchAsync(string song)
+    {
+        LavalinkTrack? loaded;
+
+        if (Uri.IsWellFormedUriString(song, UriKind.Absolute))
+        {
+            loaded = await _audioService.GetTrackAsync(song, Lavalink4NET.Rest.SearchMode.None);
+        }
+        else
+            loaded = await _audioService.GetTrackAsync(song, Lavalink4NET.Rest.SearchMode.YouTube);
+
+        if (loaded is null)
+        {
+            return new SearchResult
+            {
+                WasSuccess = false,
+                Response = $"Failed to load track for query {song}"
+            };
+        }
+
+        return new SearchResult
+        {
+            WasSuccess = true,
+            Response = "Loaded Track!",
+            Track = loaded
+        };
+
+    }
+
+
+    public async Task<PlayResult> PlayOrEnqueueAsync(IGuildUser user, IEnumerable<LavalinkTrack> lavalinkTracks, bool addToTop = false)
+    {
+        if (_audioService.HasPlayer(user.GuildId) == false)
+        {
+            return new PlayResult
+            {
+                WasSuccess = false,
+                Response = "Bot is not connected to a voice channel"
+            };
+        }
+
+        if (_audioService.GetPlayer(user.GuildId) is not QueuedLavalinkPlayer player)
+            return new PlayResult
+            {
+                WasSuccess = false,
+                Response = $"Player was not an instance of {nameof(QueuedLavalinkPlayer)}. Please report this bug!"
+            };
+
+        return await PlayOrEnqueueAsync(player, lavalinkTracks, addToTop);
+    }
+    
+    private static async Task<PlayResult> PlayOrEnqueueAsync(QueuedLavalinkPlayer player, IEnumerable<LavalinkTrack> lavalinkTracks, bool addToTop)
+    {
+        
+        var tracks = lavalinkTracks as LavalinkTrack[] ?? lavalinkTracks.ToArray();
+
+        var count = tracks.Length;
+
+        if (count == 0)
+        {
+            return new PlayResult
+            {
+                WasSuccess = false,
+                Response = "There are no tracks to play!"
+            };
+        }
+
+        var result = new PlayResult
+        {
+            WasSuccess = true,
+            TracksEnqueued = new List<LavalinkTrack>()
+        };
+        try
+        {
+            if (addToTop)
+            {
+                foreach (var track in tracks)
+                {
+                    player.Queue.Insert(0, track);
+                    result.TracksEnqueued.Add(track);
+                }
+            }
+            else
+            {
+                player.Queue.AddRange(tracks);
+                result.TracksEnqueued.AddRange(tracks);
+            }
+        }
+        catch (Exception e)
+        {
+
+            return new PlayResult
+            {
+                WasSuccess = false,
+                Exception = e
+            };
+        }
+
+        
+        if (player.State is PlayerState.Paused or PlayerState.Playing)
+            return result;
+        
+        await player.SkipAsync();
+        return result;
+
+    }
+
+
+    
 }
 
 
@@ -163,4 +316,15 @@ public class VcOperationResult
     public string? Response { get; init; }
 
     public Exception? Exception { get; init; }
+}
+
+public class SearchResult : VcOperationResult
+{
+    public LavalinkTrack? Track { get; init; }
+}
+
+public class PlayResult : VcOperationResult
+{
+    public List<LavalinkTrack>? TracksEnqueued { get; init; }
+    public LavalinkTrack? TracksPlayed { get; init; }
 }
