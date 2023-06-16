@@ -21,4 +21,16 @@ public class Skip : InteractionModuleBase
 
         await FollowupAsync(result.Response ?? result.Exception?.Message ?? "null", ephemeral: result.WasSuccess == false);
     }
+
+    [RequireContext(ContextType.Guild)]
+    [SlashCommand("play-pause", "Pauses or plays the current track")]
+    public async Task PlayPasueAsync()
+    {
+        await DeferAsync();
+        
+        var result = await _controls.PauseOrResumeAsync(Context.User as IGuildUser);
+
+        await FollowupAsync(result.Response ?? result.Exception?.Message ?? "null", ephemeral: result.WasSuccess == false);
+
+    }
 }

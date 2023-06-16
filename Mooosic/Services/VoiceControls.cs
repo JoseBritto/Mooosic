@@ -2,15 +2,18 @@ using Discord;
 using Lavalink4NET;
 using Lavalink4NET.Player;
 using Mooosic.Util;
+using Serilog;
 
 namespace Mooosic;
 
 public class VoiceControls
 {
     private readonly IAudioService _audioService;
+    private readonly ILogger _logger;
 
     public VoiceControls(IAudioService audioService)
     {
+        _logger = Log.Logger.ForContext<VoiceControls>();
         _audioService = audioService;
     }
     
@@ -156,6 +159,40 @@ public class VoiceControls
     }
 
 
+    public async Task<PauseResumeResult> PauseOrResumeAsync(IGuildUser user)
+    {
+        var player = _audioService.GetPlayer<QueuedLavalinkPlayer>(user.GuildId);
+
+        if (player is null || player.State is PlayerState.Destroyed or PlayerState.NotConnected or PlayerState.NotPlaying)
+        {
+            return new PauseResumeResult
+            {
+                WasSuccess = false,
+                Response = "There is nothing to play or pause"
+            };
+        }
+
+        if(player.State == PlayerState.Playing)
+        {
+            await player.PauseAsync();
+            return new PauseResumeResult
+            {
+                WasSuccess = true,
+                Paused = true,
+                Response = "paused"
+            };
+        }
+
+        await player.ResumeAsync();
+        return new PauseResumeResult()
+        {
+            WasSuccess = true,
+            Resumed = true,
+            Response = "resumed"
+        };
+        
+    }
+    
     public async Task<VcOperationResult> SkipAsync(IGuildUser user, int count = 1)
     {
         var guildId = user.GuildId;
@@ -216,7 +253,10 @@ public class VoiceControls
                 Response = $"Failed to load track for query {song}"
             };
         }
-
+        
+        
+        _logger.Verbose("Resolved search term {Query} as uri {URI} from {Provider}", song, loaded.Uri?.ToString() ?? "null", loaded.Provider);
+        
         return new SearchResult
         {
             WasSuccess = true,
@@ -327,4 +367,10 @@ public class PlayResult : VcOperationResult
 {
     public List<LavalinkTrack>? TracksEnqueued { get; init; }
     public LavalinkTrack? TracksPlayed { get; init; }
+}
+
+public class PauseResumeResult : VcOperationResult
+{
+    public bool Paused{ get; init; }
+    public bool Resumed{ get; init; }
 }

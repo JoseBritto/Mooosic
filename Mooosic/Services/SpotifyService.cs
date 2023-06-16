@@ -8,7 +8,7 @@ namespace Mooosic;
     {
         private readonly ILogger _logger;
 
-        private readonly SpotifyClient _spotifyClient;
+        private readonly ISpotifyClient _spotifyClient;
 
         private static readonly object SpotifyThreadKey = new object();
 
@@ -57,19 +57,36 @@ namespace Mooosic;
                     if (playlistTrack.Track is FullTrack track)
                     {
                         if (track.Artists != null && track.Artists.Count > 0)
-                            yield return new MoreTrackInfo
+                        {
+                            var info = new MoreTrackInfo
                             {
                                 RealSongName = track.Name,
-                                RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
+                                RealSongUrl = track.ExternalUrls.ContainsKey("spotify")
+                                    ? track.ExternalUrls["spotify"]
+                                    : null,
                                 SearchTerm = track.Name + " by " + track.Artists[0].Name,
                             };
+
+                            _logger.Verbose("Track converted: Spotify link: {Link} to search term {Query}",
+                                info.RealSongUrl, info.SearchTerm);
+                            
+                            yield return info;
+                        }
                         else
-                            yield return new MoreTrackInfo
+                        {
+                            var info = new MoreTrackInfo
                             {
                                 RealSongName = track.Name,
-                                RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
+                                RealSongUrl = track.ExternalUrls.ContainsKey("spotify")
+                                    ? track.ExternalUrls["spotify"]
+                                    : null,
                                 SearchTerm = track.Name,
                             };
+                            _logger.Verbose("Track converted: Spotify link: {Link} to search term {Query}",
+                                info.RealSongUrl, info.SearchTerm);
+                            
+                            yield return info;
+                        }
                     }
                 }
 
@@ -83,19 +100,33 @@ namespace Mooosic;
                     yield break;
 
                 if (track.Artists != null && track.Artists.Count > 0)
-                    yield return new MoreTrackInfo
+                {
+                    var info = new MoreTrackInfo
                     {
                         RealSongName = track.Name,
                         RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
                         SearchTerm = track.Name + " by " + track.Artists[0].Name
                     };
+
+                    _logger.Verbose("Track converted: Spotify link: {Link} to search term {Query}",
+                        info.RealSongUrl, info.SearchTerm);
+
+                    yield return info;
+                }
                 else
-                    yield return new MoreTrackInfo
+                {
+                    var info = new MoreTrackInfo
                     {
                         RealSongName = track.Name,
                         RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
                         SearchTerm = track.Name,
                     };
+                    
+                    _logger.Verbose("Track converted: Spotify link: {Link} to search term {Query}",
+                        info.RealSongUrl, info.SearchTerm);
+
+                    yield return info;
+                }
 
                 yield break;
             }
