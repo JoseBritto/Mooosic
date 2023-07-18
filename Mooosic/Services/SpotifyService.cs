@@ -41,7 +41,7 @@ namespace Mooosic;
             return false;
         }
 
-        public async IAsyncEnumerable<MoreTrackInfo> ResolveAsSearchTerms(string url)
+        public async IAsyncEnumerable<MoosicTrackContext> ResolveAsTrackContext(string url)
         {
             if (TryExtractPlaylistId(ref url))
             {
@@ -58,7 +58,7 @@ namespace Mooosic;
                     {
                         if (track.Artists != null && track.Artists.Count > 0)
                         {
-                            var info = new MoreTrackInfo
+                            var info = new MoosicTrackContext
                             {
                                 RealSongName = track.Name,
                                 RealSongUrl = track.ExternalUrls.ContainsKey("spotify")
@@ -74,7 +74,7 @@ namespace Mooosic;
                         }
                         else
                         {
-                            var info = new MoreTrackInfo
+                            var info = new MoosicTrackContext
                             {
                                 RealSongName = track.Name,
                                 RealSongUrl = track.ExternalUrls.ContainsKey("spotify")
@@ -101,7 +101,7 @@ namespace Mooosic;
 
                 if (track.Artists != null && track.Artists.Count > 0)
                 {
-                    var info = new MoreTrackInfo
+                    var info = new MoosicTrackContext
                     {
                         RealSongName = track.Name,
                         RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
@@ -115,7 +115,7 @@ namespace Mooosic;
                 }
                 else
                 {
-                    var info = new MoreTrackInfo
+                    var info = new MoosicTrackContext
                     {
                         RealSongName = track.Name,
                         RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,

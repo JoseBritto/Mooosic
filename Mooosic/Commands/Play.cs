@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Lavalink4NET;
 using Lavalink4NET.Player;
 using Microsoft.Extensions.Logging;
+using Mooosic.Util;
 using Serilog;
 using ILogger = Serilog.ILogger;
 
@@ -44,47 +45,68 @@ public class Play : InteractionModuleBase
 
         if (SpotifyService.IsSpotifyLink(query))
         {
-            var terms = _spotifyService.ResolveAsSearchTerms(query);
-            
-            var spotifyTracks = new List<LavalinkTrack>();
-            int failed = 0;
-            await foreach (var spotifyTrackInfo in terms)
-            {
-                try
-                {
-                    var result = await _controls.SearchAsync(spotifyTrackInfo.SearchTerm);
-                    if (result.WasSuccess)
-                    {
-                        var lavaTrack = result.Track!;
-                        lavaTrack.Context = spotifyTrackInfo;
-                        spotifyTracks.Add(lavaTrack);
+            var trackContexts = _spotifyService.ResolveAsTrackContext(query);
 
-                        var playResult = await _controls.PlayOrEnqueueAsync(Context.User as IGuildUser, new[] { lavaTrack });
-                        if (playResult.WasSuccess == false)
-                        {
-                            await FollowupAsync(playResult.Response ?? playResult.Exception.Message, ephemeral: true);
-                            failed++;
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.Warning(e, "Exception occured while searching spotify track on youtube");
-                }
+            var played =  await PlayFromContext(trackContexts);
 
-            }
-            if (spotifyTracks.Count == 0)
-            {
-                await FollowupAsync("Failed to load spotify tracks!");
-                return;
-            }
-
-            await FollowupAsync(
-                $"Loaded {spotifyTracks.Count} tracks and played/enqueued {spotifyTracks.Count - failed} of them");
+            await FollowupAsync($"Played/Enqueued {played.Count} tracks from spotify!");
             
             return;
         }
         
-        
+        var list = new List<MoosicTrackContext>()
+            {
+                new MoosicTrackContext
+                {
+                    SearchTerm = query
+                }
+            };
+            
+            var tracksPlayed = await PlayFromContext(list.AsEnumerable().ToAsyncEnumerable());
+
+            if (tracksPlayed.Count < 1)
+                await FollowupAsync("Failed to play track!");
+            else
+                await FollowupAsync($"Played/Enqueued {tracksPlayed[0].Title} by {tracksPlayed[0].Author}");
+    }
+
+    private async Task<List<LavalinkTrack>> PlayFromContext(IAsyncEnumerable<MoosicTrackContext> contexts)
+    {
+        var tracks = new List<LavalinkTrack>();
+        int failed = 0;
+        int success = 0;
+        await foreach (var trackContext in contexts)
+        {
+            try
+            {
+                var result = await _controls.SearchAsync(trackContext.SearchTerm);
+                if (result.WasSuccess)
+                {
+                    var lavaTrack = result.Track!;
+                    
+                    trackContext.RealSongName ??= lavaTrack.Title;
+                    trackContext.RealSongUrl ??= lavaTrack.Uri?.AbsoluteUri;
+                    
+                    lavaTrack.Context = trackContext;
+                    tracks.Add(lavaTrack);
+
+                    var playResult = await _controls.PlayOrEnqueueAsync(Context.User as IGuildUser, new[] { lavaTrack });
+                    if (playResult.WasSuccess == false)
+                    {
+                        await FollowupAsync(playResult.Response ?? playResult.Exception.Message, ephemeral: true);
+                        failed++;
+                    }
+
+                    success++;
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.Warning(e, "Exception occured while searching track on youtube. Query: {SearchTerm}", trackContext.SearchTerm);
+                failed++;
+            }
+        }
+
+        return tracks;
     }
 }
