@@ -24,7 +24,8 @@ public class Play : InteractionModuleBase
     
     [RequireContext(ContextType.Guild)]
     [SlashCommand("play", "Plays the provided song/playlist")]
-    public async Task PlayAsync(string query)
+    public async Task PlayAsync(string query, 
+        [Summary(description: "If true adds this song/playlist as the first item of the current queue")] bool skipQueue = false)
     {
         if (!_controls.IsPlayerReady(Context.Guild))
         {
@@ -47,7 +48,7 @@ public class Play : InteractionModuleBase
         {
             var trackContexts = _spotifyService.ResolveAsTrackContext(query);
 
-            var played =  await PlayFromContext(trackContexts);
+            var played =  await PlayFromContext(trackContexts, skipQueue);
 
             await FollowupAsync($"Played/Enqueued {played.Count} tracks from spotify!");
             
@@ -62,7 +63,7 @@ public class Play : InteractionModuleBase
                 }
             };
             
-            var tracksPlayed = await PlayFromContext(list.AsEnumerable().ToAsyncEnumerable());
+            var tracksPlayed = await PlayFromContext(list.AsEnumerable().ToAsyncEnumerable(), skipQueue);
 
             if (tracksPlayed.Count < 1)
                 await FollowupAsync("Failed to play track!");
@@ -70,7 +71,7 @@ public class Play : InteractionModuleBase
                 await FollowupAsync($"Played/Enqueued {tracksPlayed[0].Title} by {tracksPlayed[0].Author}");
     }
 
-    private async Task<List<LavalinkTrack>> PlayFromContext(IAsyncEnumerable<MoosicTrackContext> contexts)
+    private async Task<List<LavalinkTrack>> PlayFromContext(IAsyncEnumerable<MoosicTrackContext> contexts, bool addToTop)
     {
         var tracks = new List<LavalinkTrack>();
         int failed = 0;
@@ -90,7 +91,8 @@ public class Play : InteractionModuleBase
                     lavaTrack.Context = trackContext;
                     tracks.Add(lavaTrack);
 
-                    var playResult = await _controls.PlayOrEnqueueAsync(Context.User as IGuildUser, new[] { lavaTrack });
+                    // This will reverse the playlist if added to top. TODO: Fix this later if becomes an issue
+                    var playResult = await _controls.PlayOrEnqueueAsync(Context.User as IGuildUser, new[] { lavaTrack }, addToTop);
                     if (playResult.WasSuccess == false)
                     {
                         await FollowupAsync(playResult.Response ?? playResult.Exception.Message, ephemeral: true);
