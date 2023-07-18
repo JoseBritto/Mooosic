@@ -197,6 +197,13 @@ public class VoiceControls
     {
         var guildId = user.GuildId;
 
+        if (count == 0)
+            return new VcOperationResult()
+            {
+                WasSuccess = false,
+                Response = "Can't skip 0 tracks!"
+            };
+        
         var player = _audioService.GetPlayer<QueuedLavalinkPlayer>(guildId);
 
         if (player is null)
@@ -212,10 +219,18 @@ public class VoiceControls
                 WasSuccess = false,
                 Response = $"Player not a valid state. PlayerState: {player.State}"
             };
+        if (count > player.Queue.Count)
+        {
+            return new VcOperationResult()
+            {
+                WasSuccess = false,
+                Response = $"Unable to skip {count} tracks! There are only {player.Queue.Count} tracks in queue."
+            };
+        }
         await player.SkipAsync(count);
 
-        if (count > player.Queue.Count)
-            count = player.Queue.Count;
+        if (count > player.Queue.Count + 1)
+            count = player.Queue.Count + 1;
         
         return new VcOperationResult
         {
