@@ -43,7 +43,7 @@ public class NowPlaying : InteractionModuleBase
                 thumbnail = $"https://img.youtube.com/vi/{track.TrackIdentifier}/maxresdefault.jpg";
 
             if (thumbnail is null)
-                thumbnail = Context.Guild.SplashUrl ?? Context.Guild.IconUrl ?? "https://m.media-amazon.com/images/M/MV5BZDU3MGYxYTgtNGU1OS00ZTY1LWExZGYtMGVkMDY5YzhjZjUzXkEyXkFqcGdeQXVyMjMwODQ4NDE@._V1_.jpg";
+                thumbnail = Context.Guild.SplashUrl ?? "https://m.media-amazon.com/images/M/MV5BZDU3MGYxYTgtNGU1OS00ZTY1LWExZGYtMGVkMDY5YzhjZjUzXkEyXkFqcGdeQXVyMjMwODQ4NDE@._V1_.jpg";
             
         }
         catch (Exception e)
@@ -66,15 +66,25 @@ public class NowPlaying : InteractionModuleBase
             _logger.Error("Track context was not set! Called from now playing command");
         }
 
-       
+        var color = Color.DarkGrey;
+        
+        url ??= "https://https://britto.tech/error404"; // idk wht to put here
+
+        if (url.Contains("spotify.com"))
+            color = Color.Green;
+        else if (url.Contains("youtube.com") || url.Contains("youtu.be"))
+            color = Color.Red;
+        else if (url.Contains("soundcloud.com"))
+            color = Color.Orange;
+        
         var embedBuilder = new EmbedBuilder()
-            .WithColor(Color.Green)
-            .WithTitle(title)
-            .WithAuthor(track.Author)
-            .WithImageUrl(thumbnail)
-            .WithUrl(url ?? "https://https://britto.tech/error404") // idk wht to put here
-            .WithFooter( $"{(playerInfo.Value.State == PlayerState.Paused ? "⏸️" : "▶️" )} " + 
-                playerInfo.Value.Position.RelativePosition.ToString(@"hh\:mm\:ss") + " / " + track.Duration.ToString(@"hh\:mm\:ss"));
+        .WithColor(color)
+        .WithTitle(title)
+        .WithAuthor(track.Author)
+        .WithImageUrl(thumbnail)
+        .WithUrl(url) 
+        .WithFooter( $"{(playerInfo.Value.State == PlayerState.Paused ? "⏸️" : "▶️" )} " + 
+            playerInfo.Value.Position.RelativePosition.ToString(@"hh\:mm\:ss") + " / " + track.Duration.ToString(@"hh\:mm\:ss"));
 
         await FollowupAsync(embed: embedBuilder.Build());
     }
