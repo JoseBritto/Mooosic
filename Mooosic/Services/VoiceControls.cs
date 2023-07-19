@@ -1,6 +1,7 @@
 using Discord;
 using Lavalink4NET;
 using Lavalink4NET.Player;
+using Lavalink4NET.Rest;
 using Mooosic.Util;
 using Serilog;
 
@@ -247,7 +248,39 @@ public class VoiceControls
 
         return player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed;
     }
+
+    public bool TryGetCurrentTrack(IGuild guild, out LavalinkTrack track)
+    {
+        track = null!;
+        
+        var player = _audioService.GetPlayer(guild.Id);
+        
+        if(player is null) return false;
+
+        if (player.State != PlayerState.Paused && player.State != PlayerState.Playing) return false;
+
+        if (player.CurrentTrack is null) return false;
+
+        track = player.CurrentTrack;
+
+        return true;
+    }
     
+    public MoosicPlayerInfo? GetPlayerInfo(IGuild guild)
+    {
+        var player = _audioService.GetPlayer(guild.Id);
+        
+        if(player is null) return null;
+
+        return new MoosicPlayerInfo
+        {
+            GuildId = player.GuildId,
+            Position = player.Position,
+            State = player.State,
+            CurrentTrack = player.CurrentTrack,
+            VcId = player.VoiceChannelId
+        };
+    }
     
     public async Task<SearchResult> SearchAsync(string song)
     {
@@ -258,7 +291,10 @@ public class VoiceControls
             loaded = await _audioService.GetTrackAsync(song, Lavalink4NET.Rest.SearchMode.None);
         }
         else
-            loaded = await _audioService.GetTrackAsync(song, Lavalink4NET.Rest.SearchMode.YouTube);
+        {
+            var results = await _audioService.GetTracksAsync(song, Lavalink4NET.Rest.SearchMode.YouTube);
+            loaded = GetRelevantSong(results?.ToList());
+        }
 
         if (loaded is null)
         {
@@ -279,6 +315,29 @@ public class VoiceControls
             Track = loaded
         };
 
+    }
+
+    private LavalinkTrack? GetRelevantSong(List<LavalinkTrack>? results)
+    {
+        if (results is null || results.Count == 0)
+            return null;
+        
+        // Trying to filter out shorts videos
+        foreach (var result in results)
+        {
+            if (result.Duration < TimeSpan.FromMinutes(1))
+            {
+                if (result.Title.ToLower().Contains("#shorts"))
+                    continue;
+
+                if (result.Title.ToLower().Contains("music") && result.Title.ToLower().Contains("official"))
+                    return result;
+            }
+
+            return result;
+        }
+
+        return results[0];
     }
 
 
