@@ -369,6 +369,7 @@ public class VoiceControls
 
         var count = tracks.Length;
 
+        LavalinkTrack? played = null;
         if (count == 0)
         {
             return new PlayResult
@@ -378,26 +379,49 @@ public class VoiceControls
             };
         }
 
-        var result = new PlayResult
-        {
-            WasSuccess = true,
-            TracksEnqueued = new List<LavalinkTrack>()
-        };
         try
         {
-            if (addToTop)
+            if (player.State is PlayerState.Paused or PlayerState.Playing)
             {
-                foreach (var track in tracks)
+                var result = new PlayResult
                 {
-                    player.Queue.Insert(0, track);
-                    result.TracksEnqueued.Add(track);
+                    WasSuccess = true,
+                    TracksEnqueued = new List<LavalinkTrack>()
+                };
+                
+                if (addToTop)
+                {
+                    foreach (var track in tracks)
+                    {
+                        player.Queue.Insert(0, track);
+                        result.TracksEnqueued.Add(track);
+                    }
                 }
+                else
+                {
+                    player.Queue.AddRange(tracks);
+                    result.TracksEnqueued.AddRange(tracks);
+                }
+                
+                return result;
             }
-            else
+
+            var playResult = new PlayResult
             {
-                player.Queue.AddRange(tracks);
-                result.TracksEnqueued.AddRange(tracks);
-            }
+                WasSuccess = true,
+                TracksEnqueued = new List<LavalinkTrack>(),
+                TrackPlayed = tracks[0]
+            };
+            
+            await player.PlayAsync(tracks[0]);
+
+            if (tracks.Length <= 1) 
+                return playResult;
+            
+            player.Queue.AddRange(tracks.Skip(1));
+            playResult.TracksEnqueued.AddRange(tracks);
+
+            return playResult;
         }
         catch (Exception e)
         {
@@ -405,16 +429,10 @@ public class VoiceControls
             return new PlayResult
             {
                 WasSuccess = false,
+                Response = "Sorry an error occured 🥴",
                 Exception = e
             };
         }
-
-        
-        if (player.State is PlayerState.Paused or PlayerState.Playing)
-            return result;
-        
-        await player.SkipAsync();
-        return result;
 
     }
 
@@ -440,7 +458,7 @@ public class SearchResult : VcOperationResult
 public class PlayResult : VcOperationResult
 {
     public List<LavalinkTrack>? TracksEnqueued { get; init; }
-    public LavalinkTrack? TracksPlayed { get; init; }
+    public LavalinkTrack? TrackPlayed { get; init; }
 }
 
 public class PauseResumeResult : VcOperationResult
