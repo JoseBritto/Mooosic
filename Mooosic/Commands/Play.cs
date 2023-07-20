@@ -50,7 +50,10 @@ public class Play : InteractionModuleBase
 
             var played =  await PlayFromContext(trackContexts, skipQueue);
 
-            await FollowupAsync($"Played/Enqueued {played.Count} tracks from spotify!");
+            if (played.Count < 1)
+                await FollowupAsync("Failed to play track!");
+            else
+                await FollowupAsync($"Played/Enqueued {played.Count} tracks from spotify!");
             
             return;
         }

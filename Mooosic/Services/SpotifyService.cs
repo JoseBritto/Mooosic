@@ -8,7 +8,7 @@ namespace Mooosic;
     {
         private readonly ILogger _logger;
 
-        private readonly ISpotifyClient _spotifyClient;
+        private readonly ISpotifyClient? _spotifyClient;
 
         private static readonly object SpotifyThreadKey = new object();
 
@@ -16,6 +16,12 @@ namespace Mooosic;
         {
             this._logger = Log.Logger.ForContext<SpotifyService>();
 
+            if (settings.Spotify == null || settings.Spotify.ClientId == Constants.NONE ||
+                settings.Spotify.Secret == Constants.NONE)
+            {
+                return;
+            }
+            
             lock (SpotifyThreadKey)
             {
                 var config = SpotifyClientConfig.CreateDefault()
@@ -43,6 +49,9 @@ namespace Mooosic;
 
         public async IAsyncEnumerable<MoosicTrackContext> ResolveAsTrackContext(string url)
         {
+            if (_spotifyClient is null)
+                yield break;
+            
             if (TryExtractPlaylistId(ref url))
             {
                 var playlistPages = await _spotifyClient.Playlists.Get(url);

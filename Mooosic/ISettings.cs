@@ -19,17 +19,17 @@ public interface ISettings
     public ILavalinkSetting Lavalink { get; }
     
     [Option(Alias = "spotify")] 
-    public ISpotifySetting Spotify { get; }
+    public ISpotifySetting? Spotify { get; }
 
 
 }
 
 public interface ISpotifySetting
 {
-    [Option(Alias = "client_id")]
+    [Option(Alias = "client_id", DefaultValue = Constants.NONE)]
     public string ClientId { get; }
 
-    [Option(Alias = "secret")]
+    [Option(Alias = "secret", DefaultValue = Constants.NONE)]
     public string Secret { get; }
 }
 
