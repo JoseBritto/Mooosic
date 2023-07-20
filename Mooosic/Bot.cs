@@ -4,9 +4,12 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Lavalink4NET;
 using Lavalink4NET.DiscordNet;
+using Lavalink4NET.MemoryCache;
 using Microsoft.Extensions.DependencyInjection;
+using Mooosic.Util;
 using Serilog;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
 
 namespace Mooosic;
 
@@ -152,6 +155,8 @@ public class Bot
                 DefaultRunMode = RunMode.Async,
             })
             .AddSingleton<InteractionService>()
+           .AddSingleton<Lavalink4NET.Logging.ILogger, LavalinkLogger>()
+            /*.AddSingleton<ILavalinkCache, LavalinkCache>()*/
             .AddSingleton<IAudioService, LavalinkNode>()
             .AddSingleton(new LavalinkNodeOptions
             {
@@ -163,7 +168,6 @@ public class Bot
             .AddSingleton(_settings)
             .AddSingleton<VoiceControls>()
             .AddSingleton<SpotifyService>();
-        
         return serviceCollection.BuildServiceProvider();
     }
     
