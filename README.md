@@ -4,7 +4,7 @@ A WIP discord music bot
 # Building
 This project requires .Net 7 SDK to be built from source.
 Once installed use `dotnet build` in the project directory to produce a binary.
-More information on compiling can found here for dotnet [build](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) [publish](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) and [run](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) commands.
+More information on compiling can found here for dotnet [build](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build), [publish](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-build) and [run](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-run) commands.
 
 # Configuration
 
