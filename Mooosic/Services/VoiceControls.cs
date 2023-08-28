@@ -9,6 +9,13 @@ namespace Mooosic;
 
 public class VoiceControls
 {
+    public enum SearchProvider
+    {
+        Any,
+        Youtube,
+        Soundcloud
+    }
+    
     private readonly IAudioService _audioService;
     private readonly ILogger _logger;
 
@@ -282,7 +289,7 @@ public class VoiceControls
         };
     }
     
-    public async Task<SearchResult> SearchAsync(string song)
+    public async Task<SearchResult> SearchAsync(string song, SearchProvider provider)
     {
         LavalinkTrack? loaded;
 
@@ -292,7 +299,15 @@ public class VoiceControls
         }
         else
         {
-            var results = await _audioService.GetTracksAsync(song, Lavalink4NET.Rest.SearchMode.YouTube);
+            var searchMode = provider switch
+            {
+                SearchProvider.Any => SearchMode.YouTube,
+                SearchProvider.Youtube => SearchMode.YouTube,
+                SearchProvider.Soundcloud => SearchMode.SoundCloud,
+                _ => SearchMode.YouTube // Fallback
+            };
+            
+            var results = await _audioService.GetTracksAsync(song, searchMode);
             loaded = GetRelevantSong(results?.ToList());
         }
 

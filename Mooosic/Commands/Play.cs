@@ -11,6 +11,7 @@ namespace Mooosic.Commands;
 
 public class Play : InteractionModuleBase
 {
+    
     private readonly VoiceControls _controls;
     private readonly SpotifyService _spotifyService;
     private readonly ILogger _logger;
@@ -24,7 +25,9 @@ public class Play : InteractionModuleBase
     
     [RequireContext(ContextType.Guild)]
     [SlashCommand("play", "Plays the provided song/playlist")]
-    public async Task PlayAsync(string query, 
+    public async Task PlayAsync(
+        [Summary(description: "Search term or url to play")] string query,
+        [Summary(description: "The provider to use for searching the track")] VoiceControls.SearchProvider searchProvider = VoiceControls.SearchProvider.Any,
         [Summary(description: "If true adds this song/playlist as the first item of the current queue")] bool skipQueue = false)
     {
         if (!_controls.IsPlayerReady(Context.Guild))
@@ -48,7 +51,7 @@ public class Play : InteractionModuleBase
         {
             var trackContexts = _spotifyService.ResolveAsTrackContext(query);
 
-            var played =  await PlayFromContext(trackContexts, skipQueue);
+            var played =  await PlayFromContext(trackContexts, skipQueue, searchProvider);
 
             if (played.Count < 1)
                 await FollowupAsync("Failed to play track!");
@@ -66,7 +69,8 @@ public class Play : InteractionModuleBase
                 }
             };
             
-            var tracksPlayed = await PlayFromContext(list.AsEnumerable().ToAsyncEnumerable(), skipQueue);
+            var tracksPlayed = await PlayFromContext(
+                list.AsEnumerable().ToAsyncEnumerable(), skipQueue, searchProvider);
 
             if (tracksPlayed.Count < 1)
                 await FollowupAsync("Failed to play track!");
@@ -74,7 +78,8 @@ public class Play : InteractionModuleBase
                 await FollowupAsync($"Played/Enqueued {tracksPlayed[0].Title} by {tracksPlayed[0].Author}");
     }
 
-    private async Task<List<LavalinkTrack>> PlayFromContext(IAsyncEnumerable<MoosicTrackContext> contexts, bool addToTop)
+    private async Task<List<LavalinkTrack>> PlayFromContext(
+        IAsyncEnumerable<MoosicTrackContext> contexts, bool addToTop, VoiceControls.SearchProvider provider)
     {
         var tracks = new List<LavalinkTrack>();
         int failed = 0;
@@ -83,7 +88,7 @@ public class Play : InteractionModuleBase
         {
             try
             {
-                var result = await _controls.SearchAsync(trackContext.SearchTerm);
+                var result = await _controls.SearchAsync(trackContext.SearchTerm, provider);
                 if (result.WasSuccess)
                 {
                     var lavaTrack = result.Track!;
