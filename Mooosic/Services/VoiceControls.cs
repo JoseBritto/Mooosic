@@ -253,6 +253,7 @@ public class VoiceControls
         
         if(player is null) return false;
 
+        
         return player.State != PlayerState.NotConnected && player.State != PlayerState.Destroyed;
     }
 
