@@ -141,7 +141,6 @@ public class Bot
     
     private ServiceProvider ConfigureServices(ServiceCollection serviceCollection)
     {
-        
         var client = new DiscordSocketClient(new DiscordSocketConfig
         {
             LogLevel = LogSeverity.Info,
