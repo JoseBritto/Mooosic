@@ -36,7 +36,6 @@ public class Play : InteractionModuleBase
 
             if (voiceState?.VoiceChannel is null)
             {
-                
                 await RespondAsync("I need to be in a voice channel to execute this command!", ephemeral: true);
                 return;
             }
