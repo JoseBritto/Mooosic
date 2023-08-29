@@ -41,6 +41,7 @@ public class Play : InteractionModuleBase
             }
 
             await DeferAsync();
+            
 
             await _controls.JoinAsync(voiceState.VoiceChannel, Context.User as IGuildUser);
         }
