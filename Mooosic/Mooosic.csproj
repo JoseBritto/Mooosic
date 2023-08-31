@@ -10,6 +10,7 @@
     <ItemGroup>
       <PackageReference Include="Config.Net" Version="5.1.5" />
       <PackageReference Include="Discord.Net" Version="3.10.0" />
+      <PackageReference Include="Humanizer" Version="2.14.1" />
       <PackageReference Include="Lavalink4NET.Discord.NET" Version="3.0.1" />
       <PackageReference Include="Lavalink4NET.MemoryCache" Version="3.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
@@ -38,5 +39,6 @@
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
+
 
 </Project>
