@@ -35,58 +35,9 @@ public class NowPlaying : InteractionModuleBase
 
         await DeferAsync();
         
-        string thumbnail = null;
-        
-        try
-        {
-            if (track.Provider == StreamProvider.YouTube)
-                thumbnail = $"https://img.youtube.com/vi/{track.TrackIdentifier}/maxresdefault.jpg";
-
-            if (thumbnail is null)
-                thumbnail = Context.Guild.SplashUrl ?? "https://m.media-amazon.com/images/M/MV5BZDU3MGYxYTgtNGU1OS00ZTY1LWExZGYtMGVkMDY5YzhjZjUzXkEyXkFqcGdeQXVyMjMwODQ4NDE@._V1_.jpg";
-            
-        }
-        catch (Exception e)
-        {
-            _logger.Warning(e, "Fetching lyrics or artwork threw an exception for track {Title}", track.Title);
-        }
-
-        string title;
-        string? url = null;
-
-        if(track.Context is MoosicTrackContext ctx)
-        {
-            title = ctx.RealSongName ?? track.Title;
-            url = ctx.RealSongUrl ?? track.Uri?.AbsoluteUri;
-        }
-        else
-        {
-            title = track.Title;
-            
-            _logger.Error("Track context was not set! Called from now playing command");
-        }
-
-        var color = Color.DarkGrey;
-        
-        url ??= "https://https://britto.tech/error404"; // idk wht to put here
-
-        if (url.Contains("spotify.com"))
-            color = Color.Green;
-        else if (url.Contains("youtube.com") || url.Contains("youtu.be"))
-            color = Color.Red;
-        else if (url.Contains("soundcloud.com"))
-            color = Color.Orange;
-        
-        var embedBuilder = new EmbedBuilder()
-        .WithColor(color)
-        .WithTitle(title)
-        .WithAuthor(track.Author)
-        .WithImageUrl(thumbnail)
-        .WithUrl(url) 
-        .WithFooter( $"{(playerInfo.Value.State == PlayerState.Paused ? "⏸️" : "▶️" )} " + 
-            playerInfo.Value.Position.RelativePosition.ToString(@"hh\:mm\:ss") + " / " + track.Duration.ToString(@"hh\:mm\:ss"));
-
-        await FollowupAsync(embed: embedBuilder.Build());
+        var embedBuilder = SongDisplay.GetNowPlayingEmbedBuilder(Context.Guild, track);
+        var components = SongDisplay.GetNowPlayingButtons(playerInfo.Value.State == PlayerState.Playing);
+        await FollowupAsync(embed: embedBuilder.Build(), components: components.Build());
     }
 
 }
