@@ -1,3 +1,4 @@
+using Mooosic.Models;
 using Mooosic.Util;
 using Serilog;
 using SpotifyAPI.Web;
@@ -104,7 +105,7 @@ namespace Mooosic;
             else if (TryExtractTrackId(ref url))
             {
                 var track = await _spotifyClient.Tracks.Get(url);
-
+            
                 if (track == null)
                     yield break;
 
@@ -114,7 +115,9 @@ namespace Mooosic;
                     {
                         RealSongName = track.Name,
                         RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
-                        SearchTerm = track.Name + " by " + track.Artists[0].Name
+                        SearchTerm = track.Name + " by " + track.Artists[0].Name,
+                        FrontEndSource = new SpotifyMusicSource(),
+                        OriginalCoverArtUrl = track.Album.Images.Count > 0 ? track.Album.Images[0].Url : null
                     };
 
                     _logger.Verbose("Track converted: Spotify link: {Link} to search term {Query}",
@@ -129,6 +132,8 @@ namespace Mooosic;
                         RealSongName = track.Name,
                         RealSongUrl = track.ExternalUrls.ContainsKey("spotify") ? track.ExternalUrls["spotify"] : null,
                         SearchTerm = track.Name,
+                        FrontEndSource = new SpotifyMusicSource(),
+                        OriginalCoverArtUrl = track.Album.Images.Count > 0 ? track.Album.Images[0].Url : null
                     };
                     
                     _logger.Verbose("Track converted: Spotify link: {Link} to search term {Query}",
@@ -144,6 +149,7 @@ namespace Mooosic;
 
         }
 
+        
         private static bool TryExtractTrackId(ref string url)
         {
             string start = "open.spotify.com/track/";

@@ -1,4 +1,5 @@
 using Discord;
+using Mooosic.Models;
 
 namespace Mooosic.Util;
 
@@ -8,7 +9,10 @@ public class MoosicTrackContext
     public string? RealSongUrl { get; set; }
     public string SearchTerm { init; get; }
     
-    //TODO: Implement this
-    public IUser? RequestedBy { get; set; }
+    public IGuildUser? RequestedBy { get; set; }
+    
+    public string? OriginalCoverArtUrl { get; set; }
+    
+    public MusicSource FrontEndSource { init; get; }
 
 }

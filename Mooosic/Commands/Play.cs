@@ -3,6 +3,7 @@ using Discord.Interactions;
 using Lavalink4NET;
 using Lavalink4NET.Player;
 using Microsoft.Extensions.Logging;
+using Mooosic.Models;
 using Mooosic.Util;
 using Serilog;
 using ILogger = Serilog.ILogger;
@@ -66,7 +67,14 @@ public class Play : InteractionModuleBase
             {
                 new MoosicTrackContext
                 {
-                    SearchTerm = query
+                    SearchTerm = query,
+                    RequestedBy = Context.User as IGuildUser,
+                    FrontEndSource = searchProvider switch
+                    {
+                        VoiceControls.SearchProvider.Youtube => new YoutubeMusicSource(),
+                        VoiceControls.SearchProvider.Soundcloud => new SoundCloudMusicSource(),
+                        _ => new YoutubeMusicSource() // default to youtube
+                    }
                 }
             };
             
@@ -96,7 +104,8 @@ public class Play : InteractionModuleBase
                     
                     trackContext.RealSongName ??= lavaTrack.Title;
                     trackContext.RealSongUrl ??= lavaTrack.Uri?.AbsoluteUri;
-                    
+                    trackContext.OriginalCoverArtUrl ??= lavaTrack.GetThumbnailUrl(null);
+                    trackContext.RequestedBy = Context.User as IGuildUser;
                     lavaTrack.Context = trackContext;
                     tracks.Add(lavaTrack);
 

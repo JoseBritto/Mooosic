@@ -8,8 +8,20 @@ namespace Mooosic.Util;
 
 public static class SongDisplay
 {
-    public static string GetThumbnailUrl(this LavalinkTrack track, string defaultUrl)
+    public static string? GetThumbnailUrl(this LavalinkTrack track, string? defaultUrl)
     {
+        if (track.Context is MoosicTrackContext context)
+        {
+            if (context.OriginalCoverArtUrl is not null)
+                return context.OriginalCoverArtUrl;
+
+            return context.FrontEndSource switch
+            {
+                YoutubeMusicSource => $"https://img.youtube.com/vi/{track.TrackIdentifier}/maxresdefault.jpg",
+                _ => defaultUrl
+            };
+        }
+
         return track.Provider switch
         {
             StreamProvider.YouTube => $"https://img.youtube.com/vi/{track.TrackIdentifier}/maxresdefault.jpg",
@@ -70,7 +82,7 @@ public static class SongDisplay
             .WithFooter(
                 track.Duration.Humanize(precision: 2, maxUnit: TimeUnit.Year, minUnit: TimeUnit.Second) + " long" 
                 + " • " + 
-                "Requested by " + (context?.RequestedBy?.Username ?? "Unknown"));
+                "Requested by " + (context?.RequestedBy?.DisplayName ?? "Unknown"));
 
         //var duration = track.Duration;
         //embedBuilder.AddField("Duration", duration.ToString(@"hh\:mm\:ss"), true);
