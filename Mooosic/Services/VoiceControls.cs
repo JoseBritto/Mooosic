@@ -1,5 +1,6 @@
 using Discord;
 using Lavalink4NET;
+using Lavalink4NET.Events;
 using Lavalink4NET.Player;
 using Lavalink4NET.Rest;
 using Mooosic.Util;
@@ -19,13 +20,27 @@ public class VoiceControls
     private readonly IAudioService _audioService;
     private readonly ILogger _logger;
 
+    public event Action<TrackEndEventArgs>? TrackEnded;
+    public event Action<TrackStartedEventArgs>? TrackStarted;
     public VoiceControls(IAudioService audioService)
     {
         _logger = Log.Logger.ForContext<VoiceControls>();
         _audioService = audioService;
+        
+        audioService.TrackEnd += (sender, args) =>
+        {
+            TrackEnded?.Invoke(args);
+            return Task.CompletedTask;
+        };
+        
+        audioService.TrackStarted += (sender, args) =>
+        {
+            TrackStarted?.Invoke(args);
+            return Task.CompletedTask;
+        };
+
     }
-    
-    
+
     public async Task<VcOperationResult> JoinAsync(IVoiceChannel channel, IGuildUser user, bool force = false)
     {
         
@@ -482,3 +497,6 @@ public class PauseResumeResult : VcOperationResult
     public bool Paused{ get; init; }
     public bool Resumed{ get; init; }
 }
+
+public delegate void TrackEventHandler(object sender, TrackEventArgs e);
+

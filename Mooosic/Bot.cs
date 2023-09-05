@@ -4,7 +4,6 @@ using Discord.Interactions;
 using Discord.WebSocket;
 using Lavalink4NET;
 using Lavalink4NET.DiscordNet;
-using Lavalink4NET.MemoryCache;
 using Microsoft.Extensions.DependencyInjection;
 using Mooosic.Util;
 using Serilog;
