@@ -4,6 +4,7 @@ using Humanizer.Localisation;
 using Lavalink4NET.Player;
 using Mooosic.Models;
 using static Mooosic.Constants.CustomIds;
+using static Mooosic.Constants;
 namespace Mooosic.Util;
 
 public static class SongDisplay
@@ -34,25 +35,25 @@ public static class SongDisplay
         var loopButtonBuilder = loopMode switch
         {
             LoopMode.NoLoop => 
-                new ButtonBuilder(emote: new Emoji("🔁"), customId: LOOP, style: ButtonStyle.Secondary),
+                new ButtonBuilder(emote: new Emoji(Emojis.REPEAT), customId: LOOP_NONE, style: ButtonStyle.Secondary),
             LoopMode.LoopOnce => 
-                new ButtonBuilder(emote: new Emoji("🔂"), customId: LOOP, style: ButtonStyle.Success),
+                new ButtonBuilder(emote: new Emoji(Emojis.REPEAT_ONCE), customId: LOOP_ONCE, style: ButtonStyle.Success),
             LoopMode.LoopForever => 
-                new ButtonBuilder(emote: new Emoji("🔁"), customId: LOOP, style: ButtonStyle.Success),
+                new ButtonBuilder(emote: new Emoji(Emojis.REPEAT), customId: LOOP_FOREVER, style: ButtonStyle.Success),
             _ => 
                 throw new ArgumentOutOfRangeException(nameof(loopMode), loopMode, "Unknown loop mode")
         };
         
         var playOrPauseButton = isPlaying ? 
-            new ButtonBuilder(emote: new Emoji("⏸️"), customId: PAUSE_RESUME, style: ButtonStyle.Secondary) : 
-            new ButtonBuilder(emote: new Emoji("▶️"), customId: PAUSE_RESUME, style: ButtonStyle.Secondary);
+            new ButtonBuilder(emote: new Emoji(Emojis.PAUSE), customId: PAUSE_RESUME, style: ButtonStyle.Secondary) : 
+            new ButtonBuilder(emote: new Emoji(Emojis.PLAY), customId: PAUSE_RESUME, style: ButtonStyle.Secondary);
         
         return new ComponentBuilder()
-            .WithButton(emote: new Emoji("⏮️"), customId: PREVIOUS_SONG, style: ButtonStyle.Secondary, disabled: !showPrevious)
+            .WithButton(emote: new Emoji(Emojis.PREVIOUS), customId: PREVIOUS_SONG, style: ButtonStyle.Secondary, disabled: !showPrevious)
             .WithButton(playOrPauseButton)
             .WithButton(loopButtonBuilder)
-            .WithButton(emote: new Emoji("⏹️"), customId: STOP, style: ButtonStyle.Danger)
-            .WithButton(emote: new Emoji("⏭️"), customId: NEXT_SONG, style: ButtonStyle.Secondary, disabled: !showNext);
+            .WithButton(emote: new Emoji(Emojis.STOP), customId: STOP, style: ButtonStyle.Danger)
+            .WithButton(emote: new Emoji(Emojis.NEXT), customId: NEXT_SONG, style: ButtonStyle.Secondary, disabled: !showNext);
     }
 
     public static EmbedBuilder GetNowPlayingEmbedBuilder(IGuild guild, LavalinkTrack track)
