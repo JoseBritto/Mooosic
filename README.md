@@ -1,7 +1,7 @@
 # Mooosic
 A discord music bot. 
 > [!WARNING]
-> No longer maintained due to frequent breakages from youtube side.
+> No longer maintained due to frequent breakages from youtube's side.
 
 # Building
 This project requires .Net 7 SDK to be built from source.
